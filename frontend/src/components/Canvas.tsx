@@ -9,8 +9,10 @@ import {
 import '@xyflow/react/dist/style.css';
 import useCanvasStore from '../store';
 import useSubscriptionResources from '../hooks/useSubscriptionResources';
+import useSubscriptionCosts from '../hooks/useSubscriptionCosts';
 import AzureResourceNode from './AzureResourceNode';
 import ResourceDetailModal from './ResourceDetailModal';
+import ArchyLoadingOverlay from './ArchyLoadingOverlay';
 
 type ResourceDetail = {
     id: string;
@@ -24,8 +26,12 @@ type ResourceDetail = {
 
 export default function Canvas() {
     const store = useCanvasStore();
-    useSubscriptionResources();
+    const resourcesQuery = useSubscriptionResources();
+    const costsQuery = useSubscriptionCosts(); // Fetch all costs once
     const [selectedResource, setSelectedResource] = useState<ResourceDetail | null>(null);
+    
+    // Check if initial loading is happening
+    const isInitialLoading = resourcesQuery.isLoading || costsQuery.isLoading;
     
     const nodeTypes = {
         azureResource: AzureResourceNode,
@@ -40,6 +46,18 @@ export default function Canvas() {
             sku?: string;
         };
         
+        // Try to find cost data with case-insensitive matching
+        const costData = costsQuery.data?.get(node.id) || 
+                        costsQuery.data?.get(node.id.toLowerCase()) ||
+                        null;
+        
+        console.log('Node clicked:', {
+            id: node.id,
+            name: data.name,
+            hasCostData: !!costData,
+            cost: costData?.cost
+        });
+        
         const resource: ResourceDetail = {
             id: node.id,
             name: data.name || 'Unknown',
@@ -53,7 +71,7 @@ export default function Canvas() {
     };
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <ReactFlow
                 nodes={store.nodes}
                 edges={store.edges}
@@ -68,10 +86,18 @@ export default function Canvas() {
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>
             
+            <ArchyLoadingOverlay isLoading={isInitialLoading} />
+            
             {selectedResource && (
                 <ResourceDetailModal
                     key={selectedResource.id}
                     resource={selectedResource}
+                    costData={
+                        costsQuery.data?.get(selectedResource.id) || 
+                        costsQuery.data?.get(selectedResource.id.toLowerCase()) ||
+                        null
+                    }
+                    costLoading={costsQuery.isLoading}
                     onClose={() => setSelectedResource(null)}
                 />
             )}

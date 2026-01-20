@@ -12,7 +12,7 @@ type OpenAIChatMessage = {
     role: "system" | "user" | "assistant";
     content: string;
 };
-export default function useChat() {
+export default function useChat(architectureContext?: string) {
     const [conversation, setConversation] = useState<ChatMessage[]>([]);
     const mutation = useMutation({
         mutationFn: async (messages: ChatMessage[]) => {
@@ -21,8 +21,14 @@ export default function useChat() {
                 throw new Error("Missing VITE_OPENAI_API_KEY");
             }
 
+            // Build system prompt with architecture context
+            let fullSystemPrompt = systemPrompt;
+            if (architectureContext) {
+                fullSystemPrompt += "\n\n" + architectureContext;
+            }
+
             const payloadMessages: OpenAIChatMessage[] = [
-                { role: "system", content: systemPrompt },
+                { role: "system", content: fullSystemPrompt },
                 ...messages.map(
                     (message): OpenAIChatMessage => ({
                         role: message.role === "ai" ? "assistant" : "user",
