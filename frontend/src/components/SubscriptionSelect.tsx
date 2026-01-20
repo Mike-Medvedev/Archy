@@ -1,9 +1,7 @@
-import useAzureAuth from "../hooks/useAzureAuth";
 import useSubscriptions from "../hooks/useSubscriptions";
 import { useAppStore } from "../store";
 
 export default function SubscriptionSelect() {
-    const { isAuthenticated } = useAzureAuth();
     const { isLoading, error } = useSubscriptions();
     const subscriptions = useAppStore((state) => state.subscriptions);
     const selectedSubscriptionId = useAppStore(
@@ -13,14 +11,10 @@ export default function SubscriptionSelect() {
         (state) => state.setSelectedSubscriptionId,
     );
 
-    if (!isAuthenticated) {
-        return null;
-    }
-
     return (
         <div className="subscriptionSelect">
             <label className="subscriptionLabel" htmlFor="subscription-select">
-                Subscription
+                Environment
             </label>
             <select
                 id="subscription-select"
@@ -34,7 +28,7 @@ export default function SubscriptionSelect() {
                 disabled={isLoading}
             >
                 <option value="" disabled>
-                    {isLoading ? "Loading..." : "Select subscription"}
+                    {isLoading ? "Loading..." : "Select environment"}
                 </option>
                 {subscriptions.map((subscription) => (
                     <option key={subscription.subscriptionId} value={subscription.subscriptionId}>

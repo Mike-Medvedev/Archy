@@ -1,36 +1,25 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import useAzureAuth from "./useAzureAuth";
 import { useAppStore, type AzureSubscription } from "../store";
 
-const SUBSCRIPTIONS_ENDPOINT =
-    "https://management.azure.com/subscriptions?api-version=2020-01-01";
-
-type SubscriptionsResponse = {
-    value: AzureSubscription[];
-};
+// Mock subscriptions
+const MOCK_SUBSCRIPTIONS: AzureSubscription[] = [
+    {
+        subscriptionId: "mock-sub-demo-001",
+        displayName: "Demo Environment",
+    },
+];
 
 export default function useSubscriptions() {
-    const { isAuthenticated, getAccessToken, account } = useAzureAuth();
     const setSubscriptions = useAppStore((state) => state.setSubscriptions);
 
     const query = useQuery({
-        queryKey: ["subscriptions", account?.homeAccountId],
-        enabled: isAuthenticated,
+        queryKey: ["subscriptions", "mock"],
+        enabled: true, // Always enabled for mock data
         queryFn: async () => {
-            const token = await getAccessToken();
-            const response = await fetch(SUBSCRIPTIONS_ENDPOINT, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`ARM error: ${response.status}`);
-            }
-
-            const data: SubscriptionsResponse = await response.json();
-            return data.value ?? [];
+            // Small delay for realism
+            await new Promise(resolve => setTimeout(resolve, 300));
+            return MOCK_SUBSCRIPTIONS;
         },
     });
 

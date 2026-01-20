@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     Background,
     BackgroundVariant,
@@ -11,8 +11,11 @@ import useCanvasStore from '../store';
 import useSubscriptionResources from '../hooks/useSubscriptionResources';
 import useSubscriptionCosts from '../hooks/useSubscriptionCosts';
 import AzureResourceNode from './AzureResourceNode';
+import VNetGroupNode from './VNetGroupNode';
+import SubnetGroupNode from './SubnetGroupNode';
 import ResourceDetailModal from './ResourceDetailModal';
 import ArchyLoadingOverlay from './ArchyLoadingOverlay';
+import BlastRadiusPanel from './BlastRadiusPanel';
 
 type ParentResource = {
     name: string;
@@ -28,21 +31,27 @@ type ResourceDetail = {
     location?: string;
     sku?: string;
     isExternal?: boolean;
+    isImpacted?: boolean;
     parentResource?: ParentResource | null;
 };
 
 export default function Canvas() {
     const store = useCanvasStore();
     const resourcesQuery = useSubscriptionResources();
-    const costsQuery = useSubscriptionCosts(); // Fetch all costs once
+    const costsQuery = useSubscriptionCosts();
+    const blastRadiusResult = useCanvasStore((state) => state.blastRadiusResult);
     const [selectedResource, setSelectedResource] = useState<ResourceDetail | null>(null);
     
     // Check if initial loading is happening
     const isInitialLoading = resourcesQuery.isLoading || costsQuery.isLoading;
     
-    const nodeTypes = {
+    // Node types - includes containers for hierarchical view
+    const nodeTypes = useMemo(() => ({
         azureResource: AzureResourceNode,
-    };
+        networkResource: AzureResourceNode,
+        vnetGroup: VNetGroupNode,
+        subnetGroup: SubnetGroupNode,
+    }), []);
 
     const handleNodeClick = (_event: React.MouseEvent, node: Node) => {
         const data = node.data as {
@@ -52,6 +61,7 @@ export default function Canvas() {
             location?: string;
             sku?: string;
             parentResource?: ParentResource;
+            isImpacted?: boolean;
         };
         
         // Try to find cost data with case-insensitive matching
@@ -59,12 +69,17 @@ export default function Canvas() {
                         costsQuery.data?.get(node.id.toLowerCase()) ||
                         null;
         
+        // Get blast radius explanation if impacted
+        const explanation = blastRadiusResult?.explanations.get(node.id);
+        
         console.log('Node clicked:', {
             id: node.id,
             name: data.name,
             hasCostData: !!costData,
             cost: costData?.cost,
-            hasParent: !!data.parentResource
+            hasParent: !!data.parentResource,
+            isImpacted: data.isImpacted,
+            blastExplanation: explanation,
         });
         
         const resource: ResourceDetail = {
@@ -75,6 +90,7 @@ export default function Canvas() {
             location: data.location,
             sku: data.sku,
             isExternal: data.location === 'External',
+            isImpacted: data.isImpacted,
             parentResource: data.parentResource,
         };
         setSelectedResource(resource);
@@ -95,6 +111,11 @@ export default function Canvas() {
                 <Controls />
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>
+            
+            {/* Blast Radius Panel - only show when graph is loaded */}
+            {!isInitialLoading && store.nodes.length > 0 && (
+                <BlastRadiusPanel />
+            )}
             
             <ArchyLoadingOverlay isLoading={isInitialLoading} />
             

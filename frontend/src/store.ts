@@ -9,12 +9,13 @@ import {
     type Edge,
     type Node,
 } from '@xyflow/react';
+import type { CanonicalGraph, BlastRadiusResult } from './lib/canonicalGraph';
 
-const initialNodes: Node[] = [
-];
+const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
 interface CanvasState {
+    // React Flow state
     nodes: Node[];
     edges: Edge[];
     onNodesChange: (changes: NodeChange[]) => void;
@@ -22,10 +23,24 @@ interface CanvasState {
     onConnect: (params: Connection) => void;
     setNodes: (nodes: Node[]) => void;
     setEdges: (edges: Edge[]) => void;
+
+    // Canonical graph (internal, complete)
+    canonicalGraph: CanonicalGraph | null;
+    setCanonicalGraph: (graph: CanonicalGraph) => void;
+
+    // View mode
+    showNetworkView: boolean;
+    toggleNetworkView: () => void;
+
+    // Blast radius state
+    selectedBlastScenarioId: string | null;
+    blastRadiusResult: BlastRadiusResult | null;
+    setBlastScenario: (scenarioId: string | null, result: BlastRadiusResult | null) => void;
+    clearBlastRadius: () => void;
 }
 
-
 const useCanvasStore = create<CanvasState>()((set) => ({
+    // React Flow state
     nodes: initialNodes,
     edges: initialEdges,
     onNodesChange: (changes) =>
@@ -42,6 +57,26 @@ const useCanvasStore = create<CanvasState>()((set) => ({
         })),
     setNodes: (nodes) => set({ nodes }),
     setEdges: (edges) => set({ edges }),
+
+    // Canonical graph
+    canonicalGraph: null,
+    setCanonicalGraph: (graph) => set({ canonicalGraph: graph }),
+
+    // View mode
+    showNetworkView: false,
+    toggleNetworkView: () => set((state) => ({ showNetworkView: !state.showNetworkView })),
+
+    // Blast radius state
+    selectedBlastScenarioId: null,
+    blastRadiusResult: null,
+    setBlastScenario: (scenarioId, result) => set({
+        selectedBlastScenarioId: scenarioId,
+        blastRadiusResult: result
+    }),
+    clearBlastRadius: () => set({
+        selectedBlastScenarioId: null,
+        blastRadiusResult: null
+    }),
 }));
 
 export type AzureSubscription = {

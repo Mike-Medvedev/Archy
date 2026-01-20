@@ -11,13 +11,13 @@ export default function ArchyAgent() {
     const [input, setInput] = useState('');
     const [showScrollButton, setShowScrollButton] = useState(false);
     const conversationRef = useRef<HTMLDivElement | null>(null);
-    
+
     const nodes = useCanvasStore(state => state.nodes);
     const edges = useCanvasStore(state => state.edges);
     const subscriptions = useAppStore(state => state.subscriptions);
     const selectedSubscriptionId = useAppStore(state => state.selectedSubscriptionId);
     const costsQuery = useSubscriptionCosts();
-    
+
     // Build architecture context from current diagram (including costs!)
     const architectureContext = useMemo(() => {
         const subscription = subscriptions.find(s => s.subscriptionId === selectedSubscriptionId);
@@ -27,18 +27,11 @@ export default function ArchyAgent() {
             costsQuery.data,
             subscription?.displayName
         );
-        
-        // Debug: Log when context changes
-        console.log('Architecture context updated:', {
-            nodesCount: nodes.length,
-            edgesCount: edges.length,
-            costsCount: costsQuery.data?.size || 0,
-            hasCosts: !!costsQuery.data && costsQuery.data.size > 0
-        });
-        
+
+
         return context;
     }, [nodes, edges, costsQuery.data, subscriptions, selectedSubscriptionId]);
-    
+
     const { conversation, sendMessage, isLoading } = useChat(architectureContext);
 
     const scrollToBottom = () => {
@@ -49,7 +42,7 @@ export default function ArchyAgent() {
 
     const handleScroll = () => {
         if (!conversationRef.current) return;
-        
+
         const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
         setShowScrollButton(!isNearBottom);
@@ -61,7 +54,7 @@ export default function ArchyAgent() {
 
         sendMessage(trimmed);
         setInput('');
-        
+
         // Scroll to bottom after sending
         setTimeout(scrollToBottom, 100);
     };
@@ -73,7 +66,7 @@ export default function ArchyAgent() {
 
     return (
         <div className={styles.container}>
-            <div 
+            <div
                 className={styles.conversation}
                 ref={conversationRef}
                 onScroll={handleScroll}
@@ -84,8 +77,8 @@ export default function ArchyAgent() {
                     </div>
                 ) : (
                     conversation.map((message) => (
-                        <div 
-                            key={message.id} 
+                        <div
+                            key={message.id}
                             className={message.role === 'user' ? styles.userMessage : styles.aiMessage}
                         >
                             <div className={styles.messageRole}>
@@ -109,9 +102,9 @@ export default function ArchyAgent() {
                         </div>
                     </div>
                 )}
-                
+
                 {showScrollButton && (
-                    <button 
+                    <button
                         className={styles.scrollToBottomFab}
                         onClick={scrollToBottom}
                         title="Scroll to bottom"

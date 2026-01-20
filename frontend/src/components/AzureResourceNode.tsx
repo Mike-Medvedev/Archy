@@ -8,6 +8,8 @@ type AzureResourceNodeData = {
     location?: string;
     sku?: string;
     iconDataUri?: string;
+    isNetworkNode?: boolean;
+    isImpacted?: boolean;
 };
 
 type AzureResourceNodeType = Node<AzureResourceNodeData, "azureResource">;
@@ -15,8 +17,10 @@ type AzureResourceNodeType = Node<AzureResourceNodeData, "azureResource">;
 export default function AzureResourceNode({
     data,
 }: NodeProps<AzureResourceNodeType>) {
+    const nodeClass = `${styles.node} ${data.isImpacted ? styles.impacted : ''} ${data.isNetworkNode ? styles.networkNode : ''}`;
+    
     return (
-        <div className={styles.node}>
+        <div className={nodeClass}>
             <Handle type="target" position={Position.Top} />
             <Handle type="source" position={Position.Bottom} />
             
@@ -31,6 +35,9 @@ export default function AzureResourceNode({
                 {data.location ? <div>Location: {data.location}</div> : null}
                 {data.sku ? <div>SKU: {data.sku}</div> : null}
             </div>
+            {data.isImpacted && (
+                <div className={styles.impactedBadge}>⚠️ Impacted</div>
+            )}
         </div>
     );
 }
