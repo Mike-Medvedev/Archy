@@ -14,6 +14,12 @@ import AzureResourceNode from './AzureResourceNode';
 import ResourceDetailModal from './ResourceDetailModal';
 import ArchyLoadingOverlay from './ArchyLoadingOverlay';
 
+type ParentResource = {
+    name: string;
+    type: string;
+    sku?: string;
+};
+
 type ResourceDetail = {
     id: string;
     name: string;
@@ -22,6 +28,7 @@ type ResourceDetail = {
     location?: string;
     sku?: string;
     isExternal?: boolean;
+    parentResource?: ParentResource | null;
 };
 
 export default function Canvas() {
@@ -44,6 +51,7 @@ export default function Canvas() {
             typeLabel?: string;
             location?: string;
             sku?: string;
+            parentResource?: ParentResource;
         };
         
         // Try to find cost data with case-insensitive matching
@@ -55,7 +63,8 @@ export default function Canvas() {
             id: node.id,
             name: data.name,
             hasCostData: !!costData,
-            cost: costData?.cost
+            cost: costData?.cost,
+            hasParent: !!data.parentResource
         });
         
         const resource: ResourceDetail = {
@@ -66,6 +75,7 @@ export default function Canvas() {
             location: data.location,
             sku: data.sku,
             isExternal: data.location === 'External',
+            parentResource: data.parentResource,
         };
         setSelectedResource(resource);
     };

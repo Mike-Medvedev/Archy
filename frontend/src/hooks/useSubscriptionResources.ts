@@ -4,6 +4,7 @@ import useAzureAuth from "./useAzureAuth";
 import { useAppStore } from "../store";
 import useCanvasStore from "../store";
 import type { Node, Edge } from "@xyflow/react";
+import { shouldShowResource } from "../utils/resourceFilters";
 
 type ArmResource = {
     id: string;
@@ -337,9 +338,15 @@ const buildEdgesFromRelationships = async (
     const edges: Edge[] = [];
     const edgeSet = new Set<string>(); // To avoid duplicates
 
-    // Get Web Apps and Function Apps
+    // Create a map of resource ID to type for quick lookup
+    const resourceTypeMap = new Map<string, string>();
+    for (const resource of resources) {
+        resourceTypeMap.set(resource.id, resource.type);
+    }
+
+    // Get Web Apps and Function Apps (only if they're visible)
     const webApps = resources.filter(
-        (r) => r.type === "Microsoft.Web/sites"
+        (r) => r.type === "Microsoft.Web/sites" && shouldShowResource(r.type)
     );
 
     // First pass: Collect all env variables from all web apps
@@ -378,6 +385,12 @@ const buildEdgesFromRelationships = async (
             // Check for Azure resource relationships
             const targetResourceIds = detectRelationships(value, resources);
             for (const targetId of targetResourceIds) {
+                // Only create edge if target resource is also visible
+                const targetType = resourceTypeMap.get(targetId);
+                if (!targetType || !shouldShowResource(targetType)) {
+                    continue; // Skip edges to hidden resources
+                }
+                
                 const edgeId = `${webApp.id}->${targetId}`;
                 if (!edgeSet.has(edgeId)) {
                     edges.push({
@@ -657,9 +670,47 @@ const positionNodes = (
     return { azureNodes: positionedAzureNodes, externalNodes: positionedExternalNodes };
 };
 
-const buildNodesFromResources = (resources: ArmResource[]): Node[] => {
-    return resources.map((resource) => {
+// Find parent resource (e.g., Server Farm for Web App)
+const findParentResource = (resource: ArmResource, allResources: ArmResource[]): { name: string; type: string; sku?: string } | null => {
+    // For Web Apps, find their Server Farm (App Service Plan)
+    if (resource.type === 'Microsoft.Web/sites') {
+        // Server farm is typically in the same resource group
+        // Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Web/serverfarms/{name}
+        const rgMatch = resource.id.match(/resourceGroups\/([^/]+)\//);
+        if (rgMatch) {
+            const resourceGroup = rgMatch[1];
+            const serverFarm = allResources.find(r => 
+                r.type === 'Microsoft.Web/serverfarms' && 
+                r.id.includes(`resourceGroups/${resourceGroup}/`)
+            );
+            if (serverFarm) {
+                return {
+                    name: serverFarm.name,
+                    type: 'App Service Plan',
+                    sku: serverFarm.sku?.name ?? serverFarm.sku?.tier
+                };
+            }
+        }
+    }
+    
+    // Add more parent-child relationships as needed
+    return null;
+};
+
+const buildNodesFromResources = (resources: ArmResource[], allResources: ArmResource[]): Node[] => {
+    // Filter to only show resources users care about
+    const visibleResources = resources.filter(r => shouldShowResource(r.type));
+    
+    console.log('Resource filtering:', {
+        total: resources.length,
+        visible: visibleResources.length,
+        filtered: resources.length - visibleResources.length
+    });
+    
+    return visibleResources.map((resource) => {
         const sku = resource.sku?.name ?? resource.sku?.tier;
+        const parentResource = findParentResource(resource, allResources);
+        
         return {
             id: resource.id,
             type: "azureResource",
@@ -671,6 +722,7 @@ const buildNodesFromResources = (resources: ArmResource[]): Node[] => {
                 location: resource.location,
                 sku,
                 iconDataUri: getIconDataUri(resource.type),
+                parentResource, // Store parent resource info for modal display
             },
         };
     });
@@ -724,7 +776,8 @@ export default function useSubscriptionResources() {
 
     useEffect(() => {
         if (!query.data) return;
-        const azureNodes = buildNodesFromResources(query.data.resources);
+        // Pass full resources list for parent lookup, but only visible ones are built into nodes
+        const azureNodes = buildNodesFromResources(query.data.resources, query.data.resources);
         
         // Apply intelligent positioning
         const { azureNodes: positionedAzure, externalNodes: positionedExternal } = 

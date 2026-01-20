@@ -2,6 +2,12 @@ import { useEffect, useState, useRef } from "react";
 import styles from "./ResourceDetailModal.module.css";
 import useAzureAuth from "../hooks/useAzureAuth";
 
+type ParentResource = {
+    name: string;
+    type: string;
+    sku?: string;
+};
+
 type ResourceDetail = {
     id: string;
     name: string;
@@ -10,6 +16,7 @@ type ResourceDetail = {
     location?: string;
     sku?: string;
     isExternal?: boolean;
+    parentResource?: ParentResource | null;
 };
 
 type CostDataProp = {
@@ -172,6 +179,22 @@ export default function ResourceDetailModal({ resource, costData, costLoading, o
                             )}
                         </div>
                     </section>
+
+                    {/* Parent Resource Info */}
+                    {resource.parentResource && (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Hosting Platform</h3>
+                            <div className={styles.detailGrid}>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>{resource.parentResource.type}:</span>
+                                    <span className={styles.detailValue}>
+                                        {resource.parentResource.name}
+                                        {resource.parentResource.sku && ` (${resource.parentResource.sku})`}
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* Azure Portal Link */}
                     {portalUrl && (
