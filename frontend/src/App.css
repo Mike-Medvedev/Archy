@@ -1,0 +1,28 @@
+.container {
+  width: 100%;
+  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 1rem;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+
+  &>* {
+    padding: 1rem;
+  }
+
+  .canvas_section {
+    width: 80%;
+  }
+
+  .agent_aside {
+    width: 20%;
+  }
+}
