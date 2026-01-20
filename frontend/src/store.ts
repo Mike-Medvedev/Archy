@@ -22,6 +22,8 @@ interface CanvasState {
     onNodesChange: (changes: NodeChange[]) => void;
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (params: Connection) => void;
+    setNodes: (nodes: Node[]) => void;
+    setEdges: (edges: Edge[]) => void;
 }
 
 
@@ -40,6 +42,28 @@ const useCanvasStore = create<CanvasState>()((set) => ({
         set((state) => ({
             edges: addEdge(params, state.edges),
         })),
+    setNodes: (nodes) => set({ nodes }),
+    setEdges: (edges) => set({ edges }),
+}));
+
+export type AzureSubscription = {
+    subscriptionId: string;
+    displayName: string;
+};
+
+interface AppState {
+    subscriptions: AzureSubscription[];
+    selectedSubscriptionId: string | null;
+    setSubscriptions: (subscriptions: AzureSubscription[]) => void;
+    setSelectedSubscriptionId: (subscriptionId: string | null) => void;
+}
+
+export const useAppStore = create<AppState>()((set) => ({
+    subscriptions: [],
+    selectedSubscriptionId: null,
+    setSubscriptions: (subscriptions) => set({ subscriptions }),
+    setSelectedSubscriptionId: (subscriptionId) =>
+        set({ selectedSubscriptionId: subscriptionId }),
 }));
 
 export default useCanvasStore;

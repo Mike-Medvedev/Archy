@@ -6,11 +6,13 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import useCanvasStore from '../store';
+import useSubscriptionResources from '../hooks/useSubscriptionResources';
 
 
 
 export default function Canvas() {
     const store = useCanvasStore()
+    useSubscriptionResources()
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
