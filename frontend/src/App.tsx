@@ -1,5 +1,6 @@
 import './App.css'
-import Canvas from "./Canvas.tsx"
+import ArchyAgent from './components/ArchyAgent.tsx'
+import Canvas from "./components/Canvas.tsx"
 
 function App() {
 
@@ -13,7 +14,7 @@ function App() {
           <Canvas />
         </section>
         <aside className="agent_aside">
-          agent_aside
+          <ArchyAgent />
         </aside>
       </main>
     </div>

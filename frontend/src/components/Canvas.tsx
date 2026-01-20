@@ -5,7 +5,7 @@ import {
     ReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import useCanvasStore from './store';
+import useCanvasStore from '../store';
 
 
 
