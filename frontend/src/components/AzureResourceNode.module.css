@@ -1,0 +1,45 @@
+ .node {
+     border: 1px solid #000;
+     background: #fff;
+     padding: 0.5rem 0.75rem;
+     min-width: 200px;
+     max-width: 260px;
+     cursor: pointer;
+     transition: box-shadow 0.2s, transform 0.2s;
+ }
+
+ .node:hover {
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+     transform: translateY(-2px);
+ }
+
+ .titleRow {
+     display: flex;
+     align-items: center;
+     gap: 0.5rem;
+     margin-bottom: 0.25rem;
+ }
+
+ .icon {
+     width: 20px;
+     height: 20px;
+     flex: 0 0 20px;
+ }
+
+ .name {
+     font-weight: 600;
+     font-size: 0.95rem;
+     word-break: break-word;
+ }
+
+ .resourceName {
+     font-size: 0.78rem;
+ }
+
+ .meta {
+     font-size: 0.8rem;
+     color: #000;
+     display: flex;
+     flex-direction: column;
+     gap: 0.15rem;
+ }
