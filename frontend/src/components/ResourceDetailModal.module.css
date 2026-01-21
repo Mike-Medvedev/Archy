@@ -14,8 +14,8 @@
 
 .modal {
     background: white;
-    border-radius: 8px;
-    max-width: 700px;
+    border-radius: 12px;
+    max-width: 600px;
     width: 100%;
     max-height: 90vh;
     display: flex;
@@ -70,6 +70,175 @@
     flex: 1;
 }
 
+/* Leak Alert Section */
+.leakAlert {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.leakHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.leakIcon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.leakTitle {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #991b1b;
+}
+
+.leakSeverity {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+.leakSeverity[data-severity="high"] {
+    background: #dc2626;
+    color: white;
+}
+
+.leakSeverity[data-severity="medium"] {
+    background: #f59e0b;
+    color: white;
+}
+
+.leakSeverity[data-severity="low"] {
+    background: #6b7280;
+    color: white;
+}
+
+.leakAmount {
+    margin-left: auto;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #dc2626;
+}
+
+.leakDescription {
+    color: #7f1d1d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+}
+
+.remediationSection {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #fecaca;
+}
+
+.remediationTitle {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.remediationText {
+    margin: 0 0 1rem 0;
+    color: #4b5563;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.remediateButton {
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.remediateButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.remediateButton:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid white;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Success Alert */
+.successAlert {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #6ee7b7;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.successIcon {
+    width: 32px;
+    height: 32px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.successTitle {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #065f46;
+    margin-bottom: 4px;
+}
+
+.successText {
+    color: #047857;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Regular Sections */
 .section {
     margin-bottom: 1.5rem;
 }
@@ -80,9 +249,11 @@
 
 .sectionTitle {
     margin: 0 0 0.75rem 0;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: #111827;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .detailGrid {
@@ -99,7 +270,7 @@
 .detailLabel {
     font-weight: 500;
     color: #6b7280;
-    min-width: 80px;
+    min-width: 100px;
 }
 
 .detailValue {
@@ -107,145 +278,90 @@
     word-break: break-word;
 }
 
-.portalLink {
-    display: inline-block;
-    color: #0078d4;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border: 1px solid #0078d4;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.portalLink:hover {
-    background-color: #0078d4;
-    color: white;
-}
-
-.loading {
-    padding: 1rem;
-    text-align: center;
-    color: #6b7280;
-    font-style: italic;
-}
-
-.settingsList {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.settingItem {
-    padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 4px;
-    border: 1px solid #e5e7eb;
-}
-
-.settingKey {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #374151;
-    margin-bottom: 0.25rem;
-}
-
-.settingValue {
-    font-family: 'Courier New', monospace;
-    font-size: 0.8rem;
-    color: #6b7280;
-    word-break: break-all;
-}
-
-.emptyState {
-    color: #6b7280;
-    font-style: italic;
-    text-align: center;
-    padding: 1rem;
-}
-
-.costInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+/* Cost Grid */
+.costGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .costCard {
-    background: #f0f9ff;
-    border: 1px solid #0078d4;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     padding: 1rem;
-    margin-bottom: 0.5rem;
+    text-align: center;
 }
 
-.costLabel {
-    font-size: 0.875rem;
+.costCard[data-type="waste"] {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.costCard[data-type="waste"] .costCardValue {
+    color: #dc2626;
+}
+
+.costCard[data-type="savings"] {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+}
+
+.costCard[data-type="savings"] .costCardValue {
+    color: #059669;
+}
+
+.costCardLabel {
+    font-size: 0.75rem;
     color: #6b7280;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
 }
 
-.costAmount {
+.costCardValue {
     font-size: 1.5rem;
     font-weight: 700;
     color: #0078d4;
 }
 
-.costPeriod {
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: #6b7280;
-}
-
-.costError {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #dc2626;
-    margin-bottom: 0.5rem;
-}
-
-.costText {
-    margin: 0;
-    color: #374151;
-}
-
-.calculatorLink {
-    display: inline-block;
-    color: #0078d4;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.calculatorLink:hover {
-    color: #005a9e;
-    text-decoration: underline;
-}
-
-.costNote {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-style: italic;
-}
-
-.externalNote {
-    padding: 1rem;
+.savingsNote {
     background: #fef3c7;
-    border: 1px solid #fbbf24;
-    border-radius: 4px;
-}
-
-.externalNote strong {
-    display: block;
-    margin-bottom: 0.5rem;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
     color: #92400e;
 }
 
-.externalNote p {
-    margin: 0;
-    color: #92400e;
-    font-size: 0.875rem;
+/* Healthy Section */
+.healthySection {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #6ee7b7;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.healthyIcon {
+    width: 48px;
+    height: 48px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.healthyText {
+    color: #047857;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }

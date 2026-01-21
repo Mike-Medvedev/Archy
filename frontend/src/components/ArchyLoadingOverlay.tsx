@@ -6,10 +6,11 @@ type Props = {
 };
 
 const LOADING_STAGES = [
-    { message: "🔍 Scanning Azure infrastructure...", duration: 1000 },
-    { message: "🔗 Mapping service connections...", duration: 1500 },
-    { message: "💰 Analyzing costs and usage...", duration: 1200 },
-    { message: "🏗️ Building architecture diagram...", duration: 800 },
+    { message: "Connecting to your cloud...", duration: 1000 },
+    { message: "Reverse engineering architecture...", duration: 1500 },
+    { message: "Analyzing resource utilization...", duration: 1200 },
+    { message: "Hunting for zombie resources...", duration: 1000 },
+    { message: "Detecting cost leaks...", duration: 800 },
 ];
 
 export default function ArchyLoadingOverlay({ isLoading }: Props) {

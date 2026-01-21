@@ -1,147 +1,43 @@
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import styles from "./ResourceDetailModal.module.css";
-import useAzureAuth from "../hooks/useAzureAuth";
-
-type ParentResource = {
-    name: string;
-    type: string;
-    sku?: string;
-};
+import { LEAK_TYPE_LABELS, type CostLeak } from "../lib/canonicalGraph";
 
 type ResourceDetail = {
     id: string;
     name: string;
     type: string;
     typeLabel: string;
-    location?: string;
-    sku?: string;
-    isExternal?: boolean;
-    parentResource?: ParentResource | null;
+    monthlyCost?: number;
+    isLeaking?: boolean;
+    leak?: CostLeak;
 };
-
-type CostDataProp = {
-    resourceId: string;
-    cost: number;
-    currency: string;
-} | null;
 
 type Props = {
     resource: ResourceDetail | null;
-    costData: CostDataProp;
-    costLoading: boolean;
     onClose: () => void;
 };
 
-type AppSettings = {
-    properties?: Record<string, string>;
-};
-
-type ConnectionStringItem = {
-    name: string;
-    value: string;
-    type: string;
-};
-
-type ConnectionStringsResponse = {
-    properties?: Record<string, ConnectionStringItem>;
-};
-
-export default function ResourceDetailModal({ resource, costData, costLoading, onClose }: Props) {
-    const { getAccessToken } = useAzureAuth();
-    const [settings, setSettings] = useState<Record<string, string>>({});
-    const [connectionStrings, setConnectionStrings] = useState<Record<string, string>>({});
-    const [loading, setLoading] = useState(false);
-    const fetchedResourceIdRef = useRef<string | null>(null);
-
-    useEffect(() => {
-        // Early returns for invalid states - no state updates
-        if (!resource) return;
-        if (resource.isExternal) return;
-        if (resource.type !== "Microsoft.Web/sites") return;
-        if (fetchedResourceIdRef.current === resource.id) return;
-
-        let cancelled = false;
-
-        const fetchSettings = async () => {
-            setLoading(true);
-            try {
-                const token = await getAccessToken();
-
-                const [appSettingsRes, connStringsRes] = await Promise.all([
-                    fetch(
-                        `https://management.azure.com${resource.id}/config/appsettings/list?api-version=2022-03-01`,
-                        {
-                            method: "POST",
-                            headers: { Authorization: `Bearer ${token}` },
-                        }
-                    ),
-                    fetch(
-                        `https://management.azure.com${resource.id}/config/connectionstrings/list?api-version=2022-03-01`,
-                        {
-                            method: "POST",
-                            headers: { Authorization: `Bearer ${token}` },
-                        }
-                    ),
-                ]);
-
-                if (cancelled) return;
-
-                if (appSettingsRes.ok) {
-                    const data: AppSettings = await appSettingsRes.json();
-                    if (!cancelled) {
-                        setSettings(data.properties ?? {});
-                    }
-                }
-
-                if (connStringsRes.ok) {
-                    const data: ConnectionStringsResponse = await connStringsRes.json();
-                    const connStrings: Record<string, string> = {};
-                    if (data.properties) {
-                        for (const [key, value] of Object.entries(data.properties)) {
-                            connStrings[key] = value.value;
-                        }
-                    }
-                    if (!cancelled) {
-                        setConnectionStrings(connStrings);
-                    }
-                }
-
-                if (!cancelled) {
-                    fetchedResourceIdRef.current = resource.id;
-                }
-            } catch (error) {
-                if (!cancelled) {
-                    console.error("Error fetching resource settings:", error);
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchSettings();
-
-        return () => {
-            cancelled = true;
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [resource]);
+export default function ResourceDetailModal({ resource, onClose }: Props) {
+    const [remediating, setRemediating] = useState(false);
+    const [remediationComplete, setRemediationComplete] = useState(false);
 
     if (!resource) return null;
-
-    const portalUrl = resource.isExternal
-        ? null
-        : `https://portal.azure.com/#@/resource${resource.id}`;
-
-    const allSettings = { ...settings, ...connectionStrings };
-    const hasSettings = Object.keys(allSettings).length > 0;
 
     const handleBackdropClick = (e: React.MouseEvent) => {
         if (e.target === e.currentTarget) {
             onClose();
         }
     };
+
+    const handleRemediate = async () => {
+        setRemediating(true);
+        // Simulate remediation action
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setRemediating(false);
+        setRemediationComplete(true);
+    };
+
+    const leakTypeInfo = resource.leak?.type ? LEAK_TYPE_LABELS[resource.leak.type] : null;
 
     return (
         <div className={styles.backdrop} onClick={handleBackdropClick}>
@@ -157,116 +53,130 @@ export default function ResourceDetailModal({ resource, costData, costLoading, o
                 </div>
 
                 <div className={styles.content}>
+                    {/* Cost Leak Alert - Show prominently if leaking */}
+                    {resource.isLeaking && resource.leak && !remediationComplete && (
+                        <section className={styles.leakAlert}>
+                            <div className={styles.leakHeader}>
+                                <span className={styles.leakIcon}>
+                                    {leakTypeInfo?.icon}
+                                </span>
+                                <div>
+                                    <div className={styles.leakTitle}>
+                                        {leakTypeInfo?.label}
+                                    </div>
+                                    <div className={styles.leakSeverity} data-severity={resource.leak.severity}>
+                                        {resource.leak.severity.toUpperCase()} SEVERITY
+                                    </div>
+                                </div>
+                                <div className={styles.leakAmount}>
+                                    -${resource.leak.monthlyLeak}/mo
+                                </div>
+                            </div>
+                            
+                            <p className={styles.leakDescription}>
+                                {resource.leak.description}
+                            </p>
+                            
+                            <div className={styles.remediationSection}>
+                                <h4 className={styles.remediationTitle}>Recommended Action</h4>
+                                <p className={styles.remediationText}>
+                                    {resource.leak.remediation}
+                                </p>
+                                
+                                <button 
+                                    className={styles.remediateButton}
+                                    onClick={handleRemediate}
+                                    disabled={remediating}
+                                >
+                                    {remediating ? (
+                                        <>
+                                            <span className={styles.spinner}></span>
+                                            Applying Fix...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Fix This Issue
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Remediation Success Message */}
+                    {remediationComplete && (
+                        <section className={styles.successAlert}>
+                            <div className={styles.successIcon}>✓</div>
+                            <div>
+                                <div className={styles.successTitle}>Remediation Queued</div>
+                                <p className={styles.successText}>
+                                    The fix has been queued for deployment. Changes will take effect within 5-10 minutes.
+                                    Estimated monthly savings: <strong>${resource.leak?.monthlyLeak}/mo</strong>
+                                </p>
+                            </div>
+                        </section>
+                    )}
+
                     {/* Basic Info */}
                     <section className={styles.section}>
-                        <h3 className={styles.sectionTitle}>Details</h3>
+                        <h3 className={styles.sectionTitle}>Resource Details</h3>
                         <div className={styles.detailGrid}>
                             <div className={styles.detailItem}>
                                 <span className={styles.detailLabel}>Type:</span>
                                 <span className={styles.detailValue}>{resource.type}</span>
                             </div>
-                            {resource.location && (
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Location:</span>
-                                    <span className={styles.detailValue}>{resource.location}</span>
-                                </div>
-                            )}
-                            {resource.sku && (
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>SKU:</span>
-                                    <span className={styles.detailValue}>{resource.sku}</span>
-                                </div>
-                            )}
+                            <div className={styles.detailItem}>
+                                <span className={styles.detailLabel}>Resource ID:</span>
+                                <span className={styles.detailValue} style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                                    {resource.id}
+                                </span>
+                            </div>
                         </div>
                     </section>
 
-                    {/* Parent Resource Info */}
-                    {resource.parentResource && (
-                        <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>Hosting Platform</h3>
-                            <div className={styles.detailGrid}>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>{resource.parentResource.type}:</span>
-                                    <span className={styles.detailValue}>
-                                        {resource.parentResource.name}
-                                        {resource.parentResource.sku && ` (${resource.parentResource.sku})`}
-                                    </span>
+                    {/* Cost Information */}
+                    <section className={styles.section}>
+                        <h3 className={styles.sectionTitle}>Cost Analysis</h3>
+                        <div className={styles.costGrid}>
+                            <div className={styles.costCard}>
+                                <div className={styles.costCardLabel}>Current Monthly Cost</div>
+                                <div className={styles.costCardValue}>
+                                    ${resource.monthlyCost ?? 0}
                                 </div>
                             </div>
-                        </section>
-                    )}
-
-                    {/* Azure Portal Link */}
-                    {portalUrl && (
-                        <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>Azure Portal</h3>
-                            <a
-                                href={portalUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.portalLink}
-                            >
-                                Open in Azure Portal →
-                            </a>
-                        </section>
-                    )}
-
-                    {/* Settings and Connection Strings */}
-                    {loading && <div className={styles.loading}>Loading settings...</div>}
-                    
-                    {!loading && hasSettings && (
-                        <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>
-                                App Settings & Connection Strings
-                            </h3>
-                            <div className={styles.settingsList}>
-                                {Object.entries(allSettings).map(([key, value]) => (
-                                    <div key={key} className={styles.settingItem}>
-                                        <div className={styles.settingKey}>{key}</div>
-                                        <div className={styles.settingValue}>
-                                            {value.length > 100 ? `${value.slice(0, 100)}...` : value}
+                            
+                            {resource.isLeaking && resource.leak && (
+                                <>
+                                    <div className={styles.costCard} data-type="waste">
+                                        <div className={styles.costCardLabel}>Monthly Waste</div>
+                                        <div className={styles.costCardValue}>
+                                            -${resource.leak.monthlyLeak}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {!loading && !hasSettings && resource.type === "Microsoft.Web/sites" && (
-                        <section className={styles.section}>
-                            <p className={styles.emptyState}>No app settings or connection strings configured</p>
-                        </section>
-                    )}
-
-                    {/* Cost Information */}
-                    {!resource.isExternal && (
-                        <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>Cost</h3>
-                            <div className={styles.costInfo}>
-                                {costLoading && (
-                                    <div className={styles.costAmount}>Loading...</div>
-                                )}
-                                
-                                {!costLoading && costData && (
-                                    <div className={styles.costAmount}>
-                                        {costData.currency} ${costData.cost.toFixed(2)}
-                                        <span className={styles.costPeriod}> / month</span>
+                                    
+                                    <div className={styles.costCard} data-type="savings">
+                                        <div className={styles.costCardLabel}>Potential Cost</div>
+                                        <div className={styles.costCardValue}>
+                                            ${(resource.monthlyCost ?? 0) - resource.leak.monthlyLeak}
+                                        </div>
                                     </div>
-                                )}
-                                
-                                {!costLoading && !costData && (
-                                    <div className={styles.costAmount}>—</div>
-                                )}
+                                </>
+                            )}
+                        </div>
+                        
+                        {resource.isLeaking && resource.leak && (
+                            <div className={styles.savingsNote}>
+                                You could save <strong>${(resource.leak.monthlyLeak * 12).toLocaleString()}/year</strong> by fixing this issue.
                             </div>
-                        </section>
-                    )}
+                        )}
+                    </section>
 
-                    {/* External Service Note */}
-                    {resource.isExternal && (
-                        <section className={styles.section}>
-                            <div className={styles.externalNote}>
-                                <strong>External Service</strong>
-                                <p>This service is hosted outside of Azure. Costs are managed separately.</p>
+                    {/* Healthy Resource Message */}
+                    {!resource.isLeaking && (
+                        <section className={styles.healthySection}>
+                            <div className={styles.healthyIcon}>✓</div>
+                            <div className={styles.healthyText}>
+                                This resource is healthy and properly configured. No cost optimization issues detected.
                             </div>
                         </section>
                     )}

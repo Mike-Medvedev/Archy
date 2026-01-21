@@ -9,48 +9,37 @@ import {
 import '@xyflow/react/dist/style.css';
 import useCanvasStore from '../store';
 import useSubscriptionResources from '../hooks/useSubscriptionResources';
-import useSubscriptionCosts from '../hooks/useSubscriptionCosts';
 import AzureResourceNode from './AzureResourceNode';
-import VNetGroupNode from './VNetGroupNode';
-import SubnetGroupNode from './SubnetGroupNode';
 import ResourceDetailModal from './ResourceDetailModal';
 import ArchyLoadingOverlay from './ArchyLoadingOverlay';
-import BlastRadiusPanel from './BlastRadiusPanel';
-
-type ParentResource = {
-    name: string;
-    type: string;
-    sku?: string;
-};
+import ScanReportModal from './ScanReportModal';
+import type { CostLeak } from '../lib/canonicalGraph';
 
 type ResourceDetail = {
     id: string;
     name: string;
     type: string;
     typeLabel: string;
-    location?: string;
-    sku?: string;
-    isExternal?: boolean;
-    isImpacted?: boolean;
-    parentResource?: ParentResource | null;
+    monthlyCost?: number;
+    isLeaking?: boolean;
+    leak?: CostLeak;
 };
 
 export default function Canvas() {
     const store = useCanvasStore();
     const resourcesQuery = useSubscriptionResources();
-    const costsQuery = useSubscriptionCosts();
-    const blastRadiusResult = useCanvasStore((state) => state.blastRadiusResult);
+    const scanComplete = useCanvasStore((state) => state.scanComplete);
+    const leakingSummary = useCanvasStore((state) => state.leakingSummary);
+    const showReport = useCanvasStore((state) => state.showReport);
+    const setShowReport = useCanvasStore((state) => state.setShowReport);
     const [selectedResource, setSelectedResource] = useState<ResourceDetail | null>(null);
     
     // Check if initial loading is happening
-    const isInitialLoading = resourcesQuery.isLoading || costsQuery.isLoading;
+    const isInitialLoading = resourcesQuery.isLoading;
     
-    // Node types - includes containers for hierarchical view
+    // Node types
     const nodeTypes = useMemo(() => ({
         azureResource: AzureResourceNode,
-        networkResource: AzureResourceNode,
-        vnetGroup: VNetGroupNode,
-        subnetGroup: SubnetGroupNode,
     }), []);
 
     const handleNodeClick = (_event: React.MouseEvent, node: Node) => {
@@ -58,40 +47,19 @@ export default function Canvas() {
             name?: string;
             resourceType?: string;
             typeLabel?: string;
-            location?: string;
-            sku?: string;
-            parentResource?: ParentResource;
-            isImpacted?: boolean;
+            monthlyCost?: number;
+            isLeaking?: boolean;
+            leak?: CostLeak;
         };
-        
-        // Try to find cost data with case-insensitive matching
-        const costData = costsQuery.data?.get(node.id) || 
-                        costsQuery.data?.get(node.id.toLowerCase()) ||
-                        null;
-        
-        // Get blast radius explanation if impacted
-        const explanation = blastRadiusResult?.explanations.get(node.id);
-        
-        console.log('Node clicked:', {
-            id: node.id,
-            name: data.name,
-            hasCostData: !!costData,
-            cost: costData?.cost,
-            hasParent: !!data.parentResource,
-            isImpacted: data.isImpacted,
-            blastExplanation: explanation,
-        });
         
         const resource: ResourceDetail = {
             id: node.id,
             name: data.name || 'Unknown',
-            type: data.resourceType || data.typeLabel || 'Unknown',
+            type: data.resourceType || 'Unknown',
             typeLabel: data.typeLabel || 'Unknown',
-            location: data.location,
-            sku: data.sku,
-            isExternal: data.location === 'External',
-            isImpacted: data.isImpacted,
-            parentResource: data.parentResource,
+            monthlyCost: data.monthlyCost,
+            isLeaking: data.isLeaking,
+            leak: data.leak,
         };
         setSelectedResource(resource);
     };
@@ -112,9 +80,85 @@ export default function Canvas() {
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>
             
-            {/* Blast Radius Panel - only show when graph is loaded */}
-            {!isInitialLoading && store.nodes.length > 0 && (
-                <BlastRadiusPanel />
+            {/* Scan Summary Panel - only show when scan is complete */}
+            {scanComplete && leakingSummary && leakingSummary.leakingCount > 0 && (
+                <div style={{
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    background: 'white',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    border: '1px solid #e2e8f0',
+                    zIndex: 10,
+                    minWidth: 260,
+                }}>
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8, 
+                        marginBottom: 12,
+                        color: '#dc2626',
+                        fontWeight: 600,
+                        fontSize: '0.95rem'
+                    }}>
+                        <span style={{ fontSize: '1.2rem' }}>💸</span>
+                        Cost Leaks Detected
+                    </div>
+                    
+                    <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 8, 
+                        marginBottom: 16 
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Monthly Waste:</span>
+                            <span style={{ color: '#dc2626', fontWeight: 700, fontSize: '1.1rem' }}>
+                                ${leakingSummary.totalMonthlyLeak.toFixed(0)}/mo
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Leaking Resources:</span>
+                            <span style={{ color: '#475569', fontWeight: 600 }}>
+                                {leakingSummary.leakingCount} of {leakingSummary.totalResources}
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Yearly Impact:</span>
+                            <span style={{ color: '#dc2626', fontWeight: 700 }}>
+                                ${(leakingSummary.totalMonthlyLeak * 12).toLocaleString()}/yr
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button
+                        onClick={() => setShowReport(true)}
+                        style={{
+                            width: '100%',
+                            padding: '10px 16px',
+                            background: 'linear-gradient(135deg, #0078d4 0%, #00a4ef 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 8,
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s, box-shadow 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 120, 212, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = 'none';
+                        }}
+                    >
+                        View Full Report
+                    </button>
+                </div>
             )}
             
             <ArchyLoadingOverlay isLoading={isInitialLoading} />
@@ -123,14 +167,12 @@ export default function Canvas() {
                 <ResourceDetailModal
                     key={selectedResource.id}
                     resource={selectedResource}
-                    costData={
-                        costsQuery.data?.get(selectedResource.id) || 
-                        costsQuery.data?.get(selectedResource.id.toLowerCase()) ||
-                        null
-                    }
-                    costLoading={costsQuery.isLoading}
                     onClose={() => setSelectedResource(null)}
                 />
+            )}
+            
+            {showReport && (
+                <ScanReportModal onClose={() => setShowReport(false)} />
             )}
         </div>
     );

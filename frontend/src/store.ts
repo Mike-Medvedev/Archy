@@ -9,10 +9,17 @@ import {
     type Edge,
     type Node,
 } from '@xyflow/react';
-import type { CanonicalGraph, BlastRadiusResult } from './lib/canonicalGraph';
+import type { CanonicalGraph } from './lib/canonicalGraph';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
+
+export interface LeakingSummary {
+    totalMonthlyLeak: number;
+    leakingCount: number;
+    totalMonthlyCost: number;
+    totalResources: number;
+}
 
 interface CanvasState {
     // React Flow state
@@ -28,15 +35,18 @@ interface CanvasState {
     canonicalGraph: CanonicalGraph | null;
     setCanonicalGraph: (graph: CanonicalGraph) => void;
 
-    // View mode
-    showNetworkView: boolean;
-    toggleNetworkView: () => void;
+    // Scan state
+    scanComplete: boolean;
+    setScanComplete: (complete: boolean) => void;
 
-    // Blast radius state
-    selectedBlastScenarioId: string | null;
-    blastRadiusResult: BlastRadiusResult | null;
-    setBlastScenario: (scenarioId: string | null, result: BlastRadiusResult | null) => void;
-    clearBlastRadius: () => void;
+    // Leak summary
+    leakingSummary: LeakingSummary | null;
+    setLeakingSummary: (summary: LeakingSummary | null) => void;
+
+    // Report modal
+    showReport: boolean;
+    toggleReport: () => void;
+    setShowReport: (show: boolean) => void;
 }
 
 const useCanvasStore = create<CanvasState>()((set) => ({
@@ -62,21 +72,18 @@ const useCanvasStore = create<CanvasState>()((set) => ({
     canonicalGraph: null,
     setCanonicalGraph: (graph) => set({ canonicalGraph: graph }),
 
-    // View mode
-    showNetworkView: false,
-    toggleNetworkView: () => set((state) => ({ showNetworkView: !state.showNetworkView })),
+    // Scan state
+    scanComplete: false,
+    setScanComplete: (complete) => set({ scanComplete: complete }),
 
-    // Blast radius state
-    selectedBlastScenarioId: null,
-    blastRadiusResult: null,
-    setBlastScenario: (scenarioId, result) => set({
-        selectedBlastScenarioId: scenarioId,
-        blastRadiusResult: result
-    }),
-    clearBlastRadius: () => set({
-        selectedBlastScenarioId: null,
-        blastRadiusResult: null
-    }),
+    // Leak summary
+    leakingSummary: null,
+    setLeakingSummary: (summary) => set({ leakingSummary: summary }),
+
+    // Report modal
+    showReport: false,
+    toggleReport: () => set((state) => ({ showReport: !state.showReport })),
+    setShowReport: (show) => set({ showReport: show }),
 }));
 
 export type AzureSubscription = {
