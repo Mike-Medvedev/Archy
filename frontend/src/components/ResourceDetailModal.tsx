@@ -239,70 +239,27 @@ export default function ResourceDetailModal({ resource, costData, costLoading, o
                     )}
 
                     {/* Cost Information */}
-                    <section className={styles.section}>
-                        <h3 className={styles.sectionTitle}>Cost Information</h3>
-                        <div className={styles.costInfo}>
                     {!resource.isExternal && (
-                        <>
-                            {costLoading && (
-                                <div className={styles.costCard}>
-                                    <div className={styles.costLabel}>Month-to-Date Cost</div>
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Cost</h3>
+                            <div className={styles.costInfo}>
+                                {costLoading && (
                                     <div className={styles.costAmount}>Loading...</div>
-                                </div>
-                            )}
-                            
-                            {!costLoading && costData && (
-                                <div className={styles.costCard}>
-                                    <div className={styles.costLabel}>Month-to-Date Cost (Near Real-Time)</div>
+                                )}
+                                
+                                {!costLoading && costData && (
                                     <div className={styles.costAmount}>
                                         {costData.currency} ${costData.cost.toFixed(2)}
+                                        <span className={styles.costPeriod}> / month</span>
                                     </div>
-                                    {costData.cost === 0 && (
-                                        <div className={styles.costNote}>
-                                            No cost data yet. Data refreshes every 4-8 hours. New resources or recent usage may not appear immediately.
-                                        </div>
-                                    )}
-                                    {costData.cost > 0 && (
-                                        <div className={styles.costNote}>
-                                            Updated every 4-8 hours. May take up to 24 hours for recent charges to appear.
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            
-                            {!costLoading && !costData && (
-                                <div className={styles.costCard}>
-                                    <div className={styles.costLabel}>Cost Data</div>
-                                    <div className={styles.costNote}>
-                                        No cost data available for this resource. Data refreshes every 4-8 hours.
-                                    </div>
-                                </div>
-                            )}
-                        </>
+                                )}
+                                
+                                {!costLoading && !costData && (
+                                    <div className={styles.costAmount}>—</div>
+                                )}
+                            </div>
+                        </section>
                     )}
-                            
-                            <p className={styles.costText}>
-                                SKU: <strong>{resource.sku || "N/A"}</strong>
-                            </p>
-                            
-                            {resource.sku && !resource.isExternal && (
-                                <a
-                                    href={`https://azure.microsoft.com/en-us/pricing/calculator/`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.calculatorLink}
-                                >
-                                    Open Azure Pricing Calculator →
-                                </a>
-                            )}
-                            
-                            {!resource.isExternal && (
-                                <p className={styles.costNote}>
-                                    💡 Cost data refreshes every 4-8 hours via Azure Cost Management API. For detailed analysis, use Azure Cost Management in the portal.
-                                </p>
-                            )}
-                        </div>
-                    </section>
 
                     {/* External Service Note */}
                     {resource.isExternal && (

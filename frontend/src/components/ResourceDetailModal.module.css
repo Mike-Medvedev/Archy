@@ -193,6 +193,12 @@
     color: #0078d4;
 }
 
+.costPeriod {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
 .costError {
     font-size: 1rem;
     font-weight: 600;
