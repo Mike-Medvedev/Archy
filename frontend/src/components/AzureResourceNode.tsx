@@ -1,6 +1,6 @@
 import type { Node, NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
-import { Paper, Group, Text, Badge, Stack } from "@mantine/core";
+import { Paper, Group, Text, Badge } from "@mantine/core";
 import type { CostLeak } from "../lib/canonicalGraph";
 
 type AzureResourceNodeData = {
@@ -25,21 +25,19 @@ export default function AzureResourceNode({
       withBorder
       shadow="xs"
       style={{
-        minWidth: 200,
-        maxWidth: 260,
+        minWidth: 160,
+        maxWidth: 220,
         cursor: "pointer",
         position: "relative",
-        borderColor: data.isLeaking ? "var(--mantine-color-red-5)" : undefined,
+        borderColor: data.isLeaking ? "var(--mantine-color-red-4)" : undefined,
         borderWidth: data.isLeaking ? 2 : 1,
-        background: data.isLeaking
-          ? "linear-gradient(135deg, var(--mantine-color-red-0) 0%, var(--mantine-color-red-1) 100%)"
-          : undefined,
+        background: data.isLeaking ? "#fef7f7" : undefined,
       }}
     >
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
 
-      {/* Cost leak badge - positioned at top right */}
+      {/* Cost leak badge */}
       {data.isLeaking && data.leakAmount && (
         <Badge
           color="red"
@@ -49,45 +47,36 @@ export default function AzureResourceNode({
             position: "absolute",
             top: -10,
             right: -10,
-            boxShadow: "0 2px 8px rgba(220, 38, 38, 0.4)",
           }}
         >
           -${data.leakAmount}/mo
         </Badge>
       )}
 
-      <Group gap="xs" mb="xs">
+      <Group gap="xs" wrap="nowrap">
         {data.iconDataUri && (
           <img
             src={data.iconDataUri}
             alt=""
             style={{
-              width: 24,
-              height: 24,
+              width: 22,
+              height: 22,
               borderRadius: 4,
+              flexShrink: 0,
             }}
           />
         )}
-        <Text fw={600} size="sm">
-          {data.typeLabel}
-        </Text>
-      </Group>
-
-      <Stack gap={4}>
-        <Text size="xs" c="dimmed">
-          {data.name}
-        </Text>
-        {data.monthlyCost !== undefined && (
-          <Group gap="xs">
+        <div>
+          <Text fw={500} size="sm" lh={1.2}>
+            {data.typeLabel}
+          </Text>
+          {data.monthlyCost !== undefined && (
             <Text size="xs" c="dimmed">
-              Cost:
-            </Text>
-            <Text size="xs" fw={600}>
               ${data.monthlyCost}/mo
             </Text>
-          </Group>
-        )}
-      </Stack>
+          )}
+        </div>
+      </Group>
     </Paper>
   );
 }

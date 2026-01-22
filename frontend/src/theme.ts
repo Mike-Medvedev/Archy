@@ -75,6 +75,9 @@ export const theme = createTheme({
       },
     },
     NavLink: {
+      defaultProps: {
+        variant: "subtle",
+      },
       styles: {
         root: {
           borderRadius: "var(--mantine-radius-md)",

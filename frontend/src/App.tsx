@@ -29,8 +29,8 @@ import {
   IconLogout,
   IconSettings,
   IconScan,
-  IconServer,
   IconChevronRight,
+  IconKey,
 } from "@tabler/icons-react";
 
 function App() {
@@ -88,82 +88,10 @@ function App() {
         {/* Header */}
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
-            {/* Logo */}
-            <Group gap="xs">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 2L2 7L12 12L22 7L12 2Z"
-                  stroke="url(#gradient1)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 17L12 22L22 17"
-                  stroke="url(#gradient2)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 12L12 17L22 12"
-                  stroke="url(#gradient3)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <defs>
-                  <linearGradient
-                    id="gradient1"
-                    x1="2"
-                    y1="7"
-                    x2="22"
-                    y2="7"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#0078d4" />
-                    <stop offset="1" stopColor="#00b4d8" />
-                  </linearGradient>
-                  <linearGradient
-                    id="gradient2"
-                    x1="2"
-                    y1="19.5"
-                    x2="22"
-                    y2="19.5"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#00b4d8" />
-                    <stop offset="1" stopColor="#7b2cbf" />
-                  </linearGradient>
-                  <linearGradient
-                    id="gradient3"
-                    x1="2"
-                    y1="14.5"
-                    x2="22"
-                    y2="14.5"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#0078d4" />
-                    <stop offset="0.5" stopColor="#00b4d8" />
-                    <stop offset="1" stopColor="#7b2cbf" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <Text
-                size="xl"
-                fw={700}
-                variant="gradient"
-                gradient={{ from: "#0078d4", to: "#7b2cbf", deg: 135 }}
-              >
-                Archy
-              </Text>
-            </Group>
+            {/* Title */}
+            <Text size="xl" fw={700} c="archyBlue.6">
+              Archy
+            </Text>
 
             {/* User Menu */}
             <Menu shadow="md" width={200} position="bottom-end">
@@ -230,16 +158,23 @@ function App() {
                 <NavLink
                   label={mockSubscription.displayName}
                   leftSection={
-                    <ThemeIcon variant="light" color="blue" size="sm">
-                      <IconServer size={14} />
-                    </ThemeIcon>
-                  }
-                  active={
-                    selectedSubscriptionId === mockSubscription.subscriptionId
+                    <IconKey 
+                      size={16} 
+                      color={selectedSubscriptionId === mockSubscription.subscriptionId 
+                        ? "var(--mantine-color-blue-6)" 
+                        : "var(--mantine-color-gray-5)"
+                      } 
+                    />
                   }
                   onClick={() =>
                     handleSelectSubscription(mockSubscription.subscriptionId)
                   }
+                  style={{
+                    fontWeight: selectedSubscriptionId === mockSubscription.subscriptionId ? 600 : 400,
+                    color: selectedSubscriptionId === mockSubscription.subscriptionId 
+                      ? 'var(--mantine-color-blue-7)' 
+                      : undefined,
+                  }}
                 />
               </NavLink>
             )}

@@ -14,8 +14,7 @@ import ResourceDetailModal from "./ResourceDetailModal";
 import ArchyLoadingOverlay from "./ArchyLoadingOverlay";
 import ScanReportModal from "./ScanReportModal";
 import type { CostLeak } from "../lib/canonicalGraph";
-import { Paper, Stack, Group, Text, Button, Divider } from "@mantine/core";
-import { IconCurrencyDollar } from "@tabler/icons-react";
+import { Paper, Stack, Group, Text, Button } from "@mantine/core";
 
 type ResourceDetail = {
   id: string;
@@ -89,7 +88,7 @@ export default function Canvas() {
       {/* Scan Summary Panel - only show when scan is complete */}
       {scanComplete && leakingSummary && leakingSummary.leakingCount > 0 && (
         <Paper
-          shadow="lg"
+          shadow="sm"
           p="md"
           withBorder
           style={{
@@ -97,42 +96,40 @@ export default function Canvas() {
             top: 16,
             left: 16,
             zIndex: 10,
-            minWidth: 260,
+            width: 240,
           }}
         >
-          <Group gap="xs" mb="md">
-            <IconCurrencyDollar
-              size={20}
-              color="var(--mantine-color-red-6)"
-            />
-            <Text fw={600} c="red.6">
-              Cost Leaks Detected
-            </Text>
-          </Group>
+          <Text size="sm" fw={500} mb="sm">
+            Cost Optimization
+          </Text>
 
-          <Stack gap="xs" mb="md">
+          <Stack gap={6}>
             <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Monthly Waste:
+              <Text size="xs" c="dimmed">
+                Monthly
               </Text>
-              <Text size="lg" fw={700} c="red.6">
-                ${leakingSummary.totalMonthlyLeak.toFixed(0)}/mo
+              <Text size="sm" fw={600} c="red.7">
+                -${leakingSummary.totalMonthlyLeak.toFixed(0)}
               </Text>
             </Group>
             <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Yearly Impact:
+              <Text size="xs" c="dimmed">
+                Yearly
               </Text>
-              <Text size="sm" fw={700} c="red.6">
-                ${(leakingSummary.totalMonthlyLeak * 12).toLocaleString()}/yr
+              <Text size="sm" fw={600} c="red.7">
+                -${(leakingSummary.totalMonthlyLeak * 12).toLocaleString()}
               </Text>
             </Group>
           </Stack>
 
-          <Divider mb="md" />
-
-          <Button fullWidth onClick={() => setShowReport(true)}>
-            View Full Report
+          <Button
+            fullWidth
+            variant="light"
+            size="xs"
+            mt="md"
+            onClick={() => setShowReport(true)}
+          >
+            View Report
           </Button>
         </Paper>
       )}
