@@ -1,94 +1,8 @@
-.container {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.header {
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.headerTitle {
-  font-weight: 700;
-  font-size: 1.75rem;
-  background: linear-gradient(135deg, #0078d4 0%, #00b4d8 50%, #7b2cbf 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.5px;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.headerButton {
-  border: none;
-  background: #0078d4;
-  color: #ffffff;
-  padding: 0.65rem 1.25rem;
-  cursor: pointer;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: all 0.2s;
-}
-
-.headerButton:hover {
-  background: #005a9e;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.subscriptionSelect {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.subscriptionLabel {
-  font-size: 0.95rem;
-  color: #374151;
-  font-weight: 500;
-}
-
-.subscriptionInput {
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #111827;
-  padding: 0.65rem 0.875rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  outline: none;
-  transition: all 0.2s;
-  min-width: 200px;
-}
-
-.subscriptionInput:focus {
-  border-color: #0078d4;
-  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
-}
-
-.subscriptionError {
-  font-size: 0.875rem;
-  color: #dc2626;
-}
-
-.main {
-  flex: 1;
+/* Main content area */
+.mainContent {
   display: flex;
   flex-direction: row;
+  height: calc(100vh - 60px);
   overflow: hidden;
   position: relative;
 }
@@ -96,30 +10,33 @@
 .canvas_section {
   height: 100%;
   overflow: hidden;
-  padding: 1rem;
+  position: relative;
   transition: width 0.05s ease-out;
+  background: var(--mantine-color-gray-0);
 }
 
 .resizer {
-  width: 4px;
+  width: 1px;
   height: 100%;
-  background: #e5e7eb;
+  background: var(--mantine-color-gray-3);
   cursor: col-resize;
   position: relative;
   flex-shrink: 0;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .resizer:hover {
-  background: #0078d4;
+  background: var(--mantine-color-blue-5);
+  width: 3px;
+  box-shadow: 0 0 8px rgba(0, 120, 212, 0.3);
 }
 
 .resizer::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
-  left: -4px;
-  right: -4px;
+  left: -6px;
+  right: -6px;
   bottom: 0;
 }
 
@@ -129,4 +46,71 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  background: var(--mantine-color-body);
+  border-left: 1px solid var(--mantine-color-gray-2);
+}
+
+/* Scan CTA Overlay */
+.scanCtaOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(248, 249, 250, 0.95);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.scanCtaCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--mantine-spacing-xl);
+  background: var(--mantine-color-body);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--mantine-shadow-lg);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide React Flow attribution */
+.react-flow__attribution {
+  display: none !important;
+}
+
+.react-flow__panel {
+  box-shadow: var(--mantine-shadow-sm) !important;
+  border-radius: var(--mantine-radius-md) !important;
+  border: 1px solid var(--mantine-color-gray-3) !important;
+  overflow: hidden;
+}
+
+.react-flow__controls {
+  box-shadow: var(--mantine-shadow-sm) !important;
+  border-radius: var(--mantine-radius-md) !important;
+  border: 1px solid var(--mantine-color-gray-3) !important;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  border: none !important;
+  border-bottom: 1px solid var(--mantine-color-gray-3) !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
 }

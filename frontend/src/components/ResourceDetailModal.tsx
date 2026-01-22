@@ -1,187 +1,188 @@
 import { useState } from "react";
-import styles from "./ResourceDetailModal.module.css";
 import { LEAK_TYPE_LABELS, type CostLeak } from "../lib/canonicalGraph";
+import {
+  Modal,
+  Stack,
+  Group,
+  Text,
+  Button,
+  Badge,
+  Paper,
+  Box,
+  Anchor,
+  Loader,
+  ThemeIcon,
+} from "@mantine/core";
+import { IconCheck, IconExternalLink } from "@tabler/icons-react";
 
 type ResourceDetail = {
-    id: string;
-    name: string;
-    type: string;
-    typeLabel: string;
-    monthlyCost?: number;
-    isLeaking?: boolean;
-    leak?: CostLeak;
+  id: string;
+  name: string;
+  type: string;
+  typeLabel: string;
+  monthlyCost?: number;
+  isLeaking?: boolean;
+  leak?: CostLeak;
 };
 
 type Props = {
-    resource: ResourceDetail | null;
-    onClose: () => void;
+  resource: ResourceDetail | null;
+  onClose: () => void;
 };
 
 export default function ResourceDetailModal({ resource, onClose }: Props) {
-    const [remediating, setRemediating] = useState(false);
-    const [remediationComplete, setRemediationComplete] = useState(false);
+  const [remediating, setRemediating] = useState(false);
+  const [remediationComplete, setRemediationComplete] = useState(false);
 
-    if (!resource) return null;
+  if (!resource) return null;
 
-    const handleBackdropClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
+  const handleRemediate = async () => {
+    setRemediating(true);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setRemediating(false);
+    setRemediationComplete(true);
+  };
 
-    const handleRemediate = async () => {
-        setRemediating(true);
-        // Simulate remediation action
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setRemediating(false);
-        setRemediationComplete(true);
-    };
+  const leakTypeInfo = resource.leak?.type
+    ? LEAK_TYPE_LABELS[resource.leak.type]
+    : null;
 
-    const leakTypeInfo = resource.leak?.type ? LEAK_TYPE_LABELS[resource.leak.type] : null;
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case "high":
+        return "red";
+      case "medium":
+        return "orange";
+      case "low":
+        return "yellow";
+      default:
+        return "gray";
+    }
+  };
 
-    return (
-        <div className={styles.backdrop} onClick={handleBackdropClick}>
-            <div className={styles.modal}>
-                <div className={styles.header}>
-                    <div>
-                        <h2 className={styles.title}>{resource.name}</h2>
-                        <p className={styles.subtitle}>{resource.typeLabel}</p>
-                    </div>
-                    <button className={styles.closeButton} onClick={onClose}>
-                        ✕
-                    </button>
-                </div>
+  // Generate Azure portal URL
+  const azurePortalUrl = `https://portal.azure.com/#@/resource${resource.id}`;
 
-                <div className={styles.content}>
-                    {/* Cost Leak Alert - Show prominently if leaking */}
-                    {resource.isLeaking && resource.leak && !remediationComplete && (
-                        <section className={styles.leakAlert}>
-                            <div className={styles.leakHeader}>
-                                <span className={styles.leakIcon}>
-                                    {leakTypeInfo?.icon}
-                                </span>
-                                <div>
-                                    <div className={styles.leakTitle}>
-                                        {leakTypeInfo?.label}
-                                    </div>
-                                    <div className={styles.leakSeverity} data-severity={resource.leak.severity}>
-                                        {resource.leak.severity.toUpperCase()} SEVERITY
-                                    </div>
-                                </div>
-                                <div className={styles.leakAmount}>
-                                    -${resource.leak.monthlyLeak}/mo
-                                </div>
-                            </div>
-                            
-                            <p className={styles.leakDescription}>
-                                {resource.leak.description}
-                            </p>
-                            
-                            <div className={styles.remediationSection}>
-                                <h4 className={styles.remediationTitle}>Recommended Action</h4>
-                                <p className={styles.remediationText}>
-                                    {resource.leak.remediation}
-                                </p>
-                                
-                                <button 
-                                    className={styles.remediateButton}
-                                    onClick={handleRemediate}
-                                    disabled={remediating}
-                                >
-                                    {remediating ? (
-                                        <>
-                                            <span className={styles.spinner}></span>
-                                            Applying Fix...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Fix This Issue
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </section>
-                    )}
+  return (
+    <Modal
+      opened
+      onClose={onClose}
+      title={
+        <Box>
+          <Text size="lg" fw={600}>
+            {resource.name}
+          </Text>
+          <Text size="sm" c="dimmed">
+            {resource.typeLabel}
+          </Text>
+        </Box>
+      }
+      size="md"
+      centered
+    >
+      <Stack gap="md">
+        {/* Cost Leak Alert */}
+        {resource.isLeaking && resource.leak && !remediationComplete && (
+          <Paper p="md" withBorder style={{ borderColor: "var(--mantine-color-red-5)", borderWidth: 2 }} bg="red.0">
+            <Group justify="space-between" align="flex-start" mb="md">
+              <Box>
+                <Text size="xl" fw={700} mb={4}>
+                  {leakTypeInfo?.label}
+                </Text>
+                <Badge
+                  color={getSeverityColor(resource.leak.severity)}
+                  size="sm"
+                  variant="filled"
+                >
+                  {resource.leak.severity.toUpperCase()} SEVERITY
+                </Badge>
+              </Box>
+              <Text size="xl" fw={700} c="red">
+                -${resource.leak.monthlyLeak}/mo
+              </Text>
+            </Group>
 
-                    {/* Remediation Success Message */}
-                    {remediationComplete && (
-                        <section className={styles.successAlert}>
-                            <div className={styles.successIcon}>✓</div>
-                            <div>
-                                <div className={styles.successTitle}>Remediation Queued</div>
-                                <p className={styles.successText}>
-                                    The fix has been queued for deployment. Changes will take effect within 5-10 minutes.
-                                    Estimated monthly savings: <strong>${resource.leak?.monthlyLeak}/mo</strong>
-                                </p>
-                            </div>
-                        </section>
-                    )}
+            <Stack gap="sm">
+              <Box>
+                <Text size="sm" fw={600} mb={4}>
+                  Reason
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {resource.leak.description}
+                </Text>
+              </Box>
 
-                    {/* Basic Info */}
-                    <section className={styles.section}>
-                        <h3 className={styles.sectionTitle}>Resource Details</h3>
-                        <div className={styles.detailGrid}>
-                            <div className={styles.detailItem}>
-                                <span className={styles.detailLabel}>Type:</span>
-                                <span className={styles.detailValue}>{resource.type}</span>
-                            </div>
-                            <div className={styles.detailItem}>
-                                <span className={styles.detailLabel}>Resource ID:</span>
-                                <span className={styles.detailValue} style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                                    {resource.id}
-                                </span>
-                            </div>
-                        </div>
-                    </section>
+              <Box>
+                <Text size="sm" fw={600} mb={4}>
+                  Recommended Action
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {resource.leak.remediation}
+                </Text>
+              </Box>
 
-                    {/* Cost Information */}
-                    <section className={styles.section}>
-                        <h3 className={styles.sectionTitle}>Cost Analysis</h3>
-                        <div className={styles.costGrid}>
-                            <div className={styles.costCard}>
-                                <div className={styles.costCardLabel}>Current Monthly Cost</div>
-                                <div className={styles.costCardValue}>
-                                    ${resource.monthlyCost ?? 0}
-                                </div>
-                            </div>
-                            
-                            {resource.isLeaking && resource.leak && (
-                                <>
-                                    <div className={styles.costCard} data-type="waste">
-                                        <div className={styles.costCardLabel}>Monthly Waste</div>
-                                        <div className={styles.costCardValue}>
-                                            -${resource.leak.monthlyLeak}
-                                        </div>
-                                    </div>
-                                    
-                                    <div className={styles.costCard} data-type="savings">
-                                        <div className={styles.costCardLabel}>Potential Cost</div>
-                                        <div className={styles.costCardValue}>
-                                            ${(resource.monthlyCost ?? 0) - resource.leak.monthlyLeak}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        
-                        {resource.isLeaking && resource.leak && (
-                            <div className={styles.savingsNote}>
-                                You could save <strong>${(resource.leak.monthlyLeak * 12).toLocaleString()}/year</strong> by fixing this issue.
-                            </div>
-                        )}
-                    </section>
+              <Anchor
+                href={azurePortalUrl}
+                target="_blank"
+                size="sm"
+                mt="xs"
+              >
+                <Group gap={4}>
+                  <IconExternalLink size={14} />
+                  View in Azure Portal
+                </Group>
+              </Anchor>
 
-                    {/* Healthy Resource Message */}
-                    {!resource.isLeaking && (
-                        <section className={styles.healthySection}>
-                            <div className={styles.healthyIcon}>✓</div>
-                            <div className={styles.healthyText}>
-                                This resource is healthy and properly configured. No cost optimization issues detected.
-                            </div>
-                        </section>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+              <Button
+                fullWidth
+                mt="sm"
+                onClick={handleRemediate}
+                disabled={remediating}
+                leftSection={
+                  remediating ? <Loader size={16} color="white" /> : null
+                }
+              >
+                {remediating ? "Applying Fix..." : "Remediate"}
+              </Button>
+            </Stack>
+          </Paper>
+        )}
+
+        {/* Remediation Success */}
+        {remediationComplete && (
+          <Paper p="md" withBorder bg="green.0">
+            <Group gap="sm">
+              <ThemeIcon color="green" size="lg" radius="xl">
+                <IconCheck size={20} />
+              </ThemeIcon>
+              <Box>
+                <Text fw={600}>Remediation Queued</Text>
+                <Text size="sm" c="dimmed">
+                  Changes will take effect within 5-10 minutes. Estimated
+                  savings:{" "}
+                  <Text span fw={600}>
+                    ${resource.leak?.monthlyLeak}/mo
+                  </Text>
+                </Text>
+              </Box>
+            </Group>
+          </Paper>
+        )}
+
+        {/* Healthy Resource */}
+        {!resource.isLeaking && (
+          <Paper p="md" withBorder bg="green.0">
+            <Group gap="sm">
+              <ThemeIcon color="green" size="lg" radius="xl">
+                <IconCheck size={20} />
+              </ThemeIcon>
+              <Text size="sm">
+                This resource is healthy. No cost optimization issues detected.
+              </Text>
+            </Group>
+          </Paper>
+        )}
+      </Stack>
+    </Modal>
+  );
 }

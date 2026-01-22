@@ -1,40 +1,304 @@
-import './App.css'
-import ArchyAgent from './components/ArchyAgent.tsx'
-import Canvas from "./components/Canvas.tsx"
-import SubscriptionSelect from "./components/SubscriptionSelect.tsx"
-import useResizable from "./hooks/useResizable"
+import { useState } from "react";
+import "./App.css";
+import ArchyAgent from "./components/ArchyAgent.tsx";
+import Canvas from "./components/Canvas.tsx";
+import useResizable from "./hooks/useResizable";
+import useCanvasStore, { useAppStore } from "./store";
+import "@mantine/core/styles.css";
+
+import {
+  MantineProvider,
+  AppShell,
+  Group,
+  Text,
+  Avatar,
+  Menu,
+  UnstyledButton,
+  NavLink,
+  Button,
+  Stack,
+  Box,
+  ThemeIcon,
+} from "@mantine/core";
+import { theme } from "./theme";
+import {
+  IconCloud,
+  IconCloudCheck,
+  IconChevronDown,
+  IconChevronUp,
+  IconLogout,
+  IconSettings,
+  IconScan,
+  IconServer,
+  IconChevronRight,
+} from "@tabler/icons-react";
 
 function App() {
   const { width: agentWidth, handleMouseDown } = useResizable({
-    initialWidth: 400,
-    minWidth: 300,
+    initialWidth: 420,
+    minWidth: 360,
     maxWidth: 800,
-    direction: 'right'
-  })
+    direction: "right",
+  });
+
+  const [cloudConnected, setCloudConnected] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [azureExpanded, setAzureExpanded] = useState(true);
+  const selectedSubscriptionId = useAppStore(
+    (state) => state.selectedSubscriptionId,
+  );
+  const setSelectedSubscriptionId = useAppStore(
+    (state) => state.setSelectedSubscriptionId,
+  );
+  const setSubscriptions = useAppStore((state) => state.setSubscriptions);
+  const scanComplete = useCanvasStore((state) => state.scanComplete);
+
+  // Mock subscription for demo
+  const mockSubscription = {
+    subscriptionId: "demo-subscription-123",
+    displayName: "Michael's Subscription",
+  };
+
+  const handleConnectCloud = () => {
+    setCloudConnected(true);
+    setSubscriptions([mockSubscription]);
+  };
+
+  const handleSelectSubscription = (subscriptionId: string) => {
+    setSelectedSubscriptionId(subscriptionId);
+  };
+
+  const handleStartScan = () => {
+    setIsScanning(true);
+    setTimeout(() => {
+      setIsScanning(false);
+    }, 3000);
+  };
+
+  // Show scan CTA when subscription is selected but scan hasn't started
+  const showScanCTA = selectedSubscriptionId && !scanComplete && !isScanning;
 
   return (
-    <div className="container">
-      <header className="header">
-        <div className="headerTitle">Archy</div>
-        <div className="headerActions">
-          <SubscriptionSelect />
-        </div>
-      </header>
-      <main className="main">
-        <section className="canvas_section" style={{ width: `calc(100% - ${agentWidth}px)` }}>
-          <Canvas />
-        </section>
-        <div
-          className="resizer"
-          onMouseDown={handleMouseDown}
-          title="Drag to resize"
-        />
-        <aside className="agent_aside" style={{ width: `${agentWidth}px` }}>
-          <ArchyAgent />
-        </aside>
-      </main>
-    </div>
-  )
+    <MantineProvider theme={theme}>
+      <AppShell
+        header={{ height: 60 }}
+        navbar={{ width: 280, breakpoint: "sm" }}
+        padding={0}
+      >
+        {/* Header */}
+        <AppShell.Header>
+          <Group h="100%" px="md" justify="space-between">
+            {/* Logo */}
+            <Group gap="xs">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2L2 7L12 12L22 7L12 2Z"
+                  stroke="url(#gradient1)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 17L12 22L22 17"
+                  stroke="url(#gradient2)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 12L12 17L22 12"
+                  stroke="url(#gradient3)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <defs>
+                  <linearGradient
+                    id="gradient1"
+                    x1="2"
+                    y1="7"
+                    x2="22"
+                    y2="7"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#0078d4" />
+                    <stop offset="1" stopColor="#00b4d8" />
+                  </linearGradient>
+                  <linearGradient
+                    id="gradient2"
+                    x1="2"
+                    y1="19.5"
+                    x2="22"
+                    y2="19.5"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#00b4d8" />
+                    <stop offset="1" stopColor="#7b2cbf" />
+                  </linearGradient>
+                  <linearGradient
+                    id="gradient3"
+                    x1="2"
+                    y1="14.5"
+                    x2="22"
+                    y2="14.5"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#0078d4" />
+                    <stop offset="0.5" stopColor="#00b4d8" />
+                    <stop offset="1" stopColor="#7b2cbf" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <Text
+                size="xl"
+                fw={700}
+                variant="gradient"
+                gradient={{ from: "#0078d4", to: "#7b2cbf", deg: 135 }}
+              >
+                Archy
+              </Text>
+            </Group>
+
+            {/* User Menu */}
+            <Menu shadow="md" width={200} position="bottom-end">
+              <Menu.Target>
+                <UnstyledButton>
+                  <Group gap="xs">
+                    <Avatar size="sm" radius="xl" color="violet">
+                      M
+                    </Avatar>
+                    <Text size="sm" fw={500}>
+                      Michael
+                    </Text>
+                    <IconChevronDown size={14} />
+                  </Group>
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item leftSection={<IconSettings size={14} />}>
+                  Settings
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item color="red" leftSection={<IconLogout size={14} />}>
+                  Sign out
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
+        </AppShell.Header>
+
+        {/* Left Navbar */}
+        <AppShell.Navbar p="md">
+          <Stack gap="xs">
+            <Text size="xs" fw={500} c="dimmed" tt="uppercase">
+              Cloud Connections
+            </Text>
+
+            {!cloudConnected ? (
+              <NavLink
+                label="Connect Azure"
+                description="Link your Azure account"
+                leftSection={
+                  <ThemeIcon variant="light" color="blue" size="lg">
+                    <IconCloud size={18} />
+                  </ThemeIcon>
+                }
+                rightSection={<IconChevronRight size={14} />}
+                onClick={handleConnectCloud}
+                active
+              />
+            ) : (
+              <NavLink
+                label="Azure"
+                description="1 subscription"
+                leftSection={
+                  <ThemeIcon variant="light" color="green" size="lg">
+                    <IconCloudCheck size={18} />
+                  </ThemeIcon>
+                }
+                childrenOffset={28}
+                opened={azureExpanded}
+                onChange={setAzureExpanded}
+                rightSection={azureExpanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+              >
+                <NavLink
+                  label={mockSubscription.displayName}
+                  leftSection={
+                    <ThemeIcon variant="light" color="blue" size="sm">
+                      <IconServer size={14} />
+                    </ThemeIcon>
+                  }
+                  active={
+                    selectedSubscriptionId === mockSubscription.subscriptionId
+                  }
+                  onClick={() =>
+                    handleSelectSubscription(mockSubscription.subscriptionId)
+                  }
+                />
+              </NavLink>
+            )}
+
+          </Stack>
+        </AppShell.Navbar>
+
+        {/* Main Content */}
+        <AppShell.Main>
+          <div className="mainContent">
+            <section
+              className="canvas_section"
+              style={{ width: `calc(100% - ${agentWidth}px)` }}
+            >
+              {/* Scan CTA Overlay */}
+              {showScanCTA && (
+                <div className="scanCtaOverlay">
+                  <Box className="scanCtaCard">
+                    <ThemeIcon
+                      size={80}
+                      radius="xl"
+                      variant="light"
+                      color="blue"
+                      mb="lg"
+                    >
+                      <IconScan size={40} stroke={1.5} />
+                    </ThemeIcon>
+                    <Text size="xl" fw={600} mb="xs">
+                      Ready to Scan
+                    </Text>
+                    <Text size="sm" c="dimmed" mb="lg" maw={300} ta="center">
+                      Analyze your Azure architecture to discover resources,
+                      dependencies, and cost optimization opportunities.
+                    </Text>
+                    <Button
+                      size="lg"
+                      leftSection={<IconScan size={20} />}
+                      onClick={handleStartScan}
+                    >
+                      Start Architecture Scan
+                    </Button>
+                  </Box>
+                </div>
+              )}
+              <Canvas />
+            </section>
+            <div
+              className="resizer"
+              onMouseDown={handleMouseDown}
+              title="Drag to resize"
+            />
+            <aside className="agent_aside" style={{ width: `${agentWidth}px` }}>
+              <ArchyAgent />
+            </aside>
+          </div>
+        </AppShell.Main>
+      </AppShell>
+    </MantineProvider>
+  );
 }
 
-export default App
+export default App;
